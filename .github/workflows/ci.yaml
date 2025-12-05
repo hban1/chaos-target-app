@@ -1,0 +1,55 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  # ⚠️ hban1로 수정했는지 꼭 확인!
+  IMAGE_NAME: ghcr.io/hban1/online-boutique-frontend
+  INFRA_REPO: hban1/chaos-gitops-lab
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Log in to GHCR
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GHCR_TOKEN }}
+
+    - name: Build and Push Docker Image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./src/frontend   # Dockerfile 경로
+        push: true
+        tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+    - name: Update Image Tag in Infra Repo
+      uses: actions/checkout@v3
+      with:
+        repository: ${{ env.INFRA_REPO }}
+        token: ${{ secrets.GIT_PAT }}
+        path: infra-repo
+
+    - name: Modify YAML and Push
+      run: |
+        cd infra-repo/k8s-manifests/online-boutique
+        
+        # 이미지 태그를 현재 커밋 해시(github.sha)로 변경
+        sed -i "s|image: .*online-boutique-frontend:.*|image: ${{ env.IMAGE_NAME }}:${{ github.sha }}|g" frontend.yaml
+        
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add .
+        git commit -m "Update frontend image tag to ${{ github.sha }}"
+        git push
