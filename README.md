@@ -7,10 +7,20 @@
 
 
 chaos-target-app/
+
+
 ├── .github/workflows/   # CI 파이프라인 (GitHub Actions)
+
+
 ├── src/                 # 마이크로서비스 소스 코드 (Go, Python, Java 등)
+
+
 ├── protos/              # gRPC 프로토콜 버퍼 파일
+
+
 ├── Dockerfile           # 서비스별 도커 빌드 명세
+
+
 └── README.md            # 프로젝트 안내
 
 주의: Kubernetes Manifest(YAML), Helm Chart, Ansible 파일은 이곳이 아닌
