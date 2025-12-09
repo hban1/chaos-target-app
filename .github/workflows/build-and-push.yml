@@ -11,7 +11,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  # 이미지 경로: ghcr.io/<owner>/<image>
   IMAGE_NAMESPACE: ${{ github.repository_owner }}
 
 jobs:
@@ -19,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         service:
           - frontend
@@ -29,21 +29,16 @@ jobs:
           - shippingservice
           - emailservice
           - currencyservice
+          - adservice
+          - recommendationservice
 
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      # (옵션) Private infra repo 접근이 필요할 때
-      - name: Add infra repo access
-        if: ${{ secrets.GIT_PAT != '' }}
-        run: |
-          git config --global url."https://${{ secrets.GIT_PAT }}@github.com/".insteadOf "https://github.com/"
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # GHCR 로그인 (GHCR_TOKEN이 없으면 GITHUB_TOKEN을 fallback로 사용)
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
